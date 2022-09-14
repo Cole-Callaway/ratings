@@ -12,6 +12,7 @@ db = SQLAlchemy()
 ##############################################################################
 # Model definitions
 
+
 class User(db.Model):
     """User of ratings website."""
 
@@ -29,12 +30,14 @@ class User(db.Model):
 
 ##############################################################################
 # Helper functions
+    def __repr__(self):
+        return f'<User user_id={self.user_id} email={self.email}>'
 
 def connect_to_db(app):
     """Connect the database to our Flask app."""
 
     # Configure to use our PstgreSQL database
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql:///ratings'
+    app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql://postgres:cricketdog1@localhost:5432/ratings"
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     db.app = app
     db.init_app(app)

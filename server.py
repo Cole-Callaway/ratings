@@ -1,10 +1,8 @@
 """Movie Ratings."""
 
-from atexit import register
-from urllib import request
 from jinja2 import StrictUndefined
 
-from flask import Flask, render_template, flash, redirect, session
+from flask import Flask, render_template, flash, redirect, session, request
 from flask_debugtoolbar import DebugToolbarExtension
 
 from model import connect_to_db, db, User, Movie, Rating
@@ -44,8 +42,8 @@ def register_form():
 @app.route('/register', methods = ['POST'])
 def register_process():
     
-    email = register_form['email']
-    password = register_form['password']
+    email = request.form['email']
+    password = request.form['password']
     age = int(request.form['age'])
     zipcode = request.form['zipcode']
     

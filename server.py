@@ -7,7 +7,7 @@ from jinja2 import StrictUndefined
 from flask import Flask, render_template, flash, redirect, session
 from flask_debugtoolbar import DebugToolbarExtension
 
-from model import connect_to_db, db, User
+from model import connect_to_db, db, User, Movie, Rating
 
 
 app = Flask(__name__)
@@ -31,8 +31,13 @@ def user_list():
     users = User.query.all()
     return render_template('user_list.html', users=users)
 
+@app.route('/users/<int:user_id>')
+def user_detail(user_id):
+    
+    user = User.query.get(user_id)
+    return render_template('user.html', user=user)
 
-@app.route('/register', methods=['POST'])
+@app.route('/register', methods=['GET'])
 def register_form():
     return render_template('register_form.html')
 
@@ -75,6 +80,59 @@ def login_process():
     
     flash('Logged in')
     return redirect(f'/user/{user.user_id}')
+
+@app.route('/logout')
+def logout():
+    
+    del session['user_id']
+    flash('Logged out')
+    return redirect('/')
+
+@app.route('/movies')
+def movie_list():
+    
+    movies = Movie.query.order_by('title').all()
+    return render_template('movie_list.html', movies=movies)
+
+@app.route('/movies/<int:movie_id>', methods=['GET'])
+def movie_detail(movie_id):
+    
+    movie = Movie.query.get(movie_id)
+    
+    user_id = session.get('user_id')
+    
+    if user_id:
+        user_rating = Rating.query.filter_by(movie_id=movie_id, user_id=user_id).first()
+    
+    else:
+        user_rating = None
+        
+    return render_template('movie.html',
+                           movie=movie,
+                           user_rating=user_rating)
+    
+@app.route('/movies/<int:movie_id>', methods=['POST'])
+def movie_detail_process(movie_id):
+    
+    score = int(request.form['score'])
+    
+    user_id = session.get('user_id')
+    if not user_id:
+        raise Exception('No user logged in')
+    
+    rating = Rating.query.filter_by(user_id=user_id, movie_id=movie_id).first()
+    
+    if rating:
+        rating.score = score
+        flash('Rating updated')
+    else:
+        rating = Rating(user_id=user_id, movie_id=movie_id, score=score)
+        flash('Rating added')
+        db.session.add(rating)
+    
+    db.session.commit()
+    
+    return redirect(f'/movies/{movie_id}')
 
 
 if __name__ == "__main__":
